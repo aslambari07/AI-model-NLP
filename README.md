@@ -1,4 +1,4 @@
-# Tugas Besar AI: Klasifikasi Teks Berita + Aplikasi Web
+# AI: Klasifikasi Teks Berita + Aplikasi Web
 
 Proyek ini dibuat seperti alur praktikum dari langkah 1 sampai akhir:
 
