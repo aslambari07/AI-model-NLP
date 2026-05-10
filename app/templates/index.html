@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI News Classifier</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <p class="eyebrow">Tugas Besar AI</p>
+        <h1>Klasifikasi Berita Berbasis NLP</h1>
+        <p class="lede">
+          Web ini memprediksi kategori berita ke dalam empat kelas:
+          <strong>World</strong>, <strong>Sports</strong>,
+          <strong>Business</strong>, dan <strong>Sci/Tech</strong>.
+        </p>
+        <div class="stats">
+          <div class="card">
+            <span class="label">Target</span>
+            <strong>Akurasi > 80%</strong>
+          </div>
+          <div class="card">
+            <span class="label">Akurasi Model</span>
+            <strong>
+              {% if accuracy is not none %}
+                {{ "%.2f"|format(accuracy * 100) }}%
+              {% else %}
+                Belum dilatih
+              {% endif %}
+            </strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <label for="newsText">Masukkan teks berita</label>
+        <textarea
+          id="newsText"
+          placeholder="Contoh: Apple reports higher iPhone sales while expanding its AI product roadmap."
+        ></textarea>
+        <button id="predictButton">Prediksi Sekarang</button>
+        <p id="status" class="status"></p>
+
+        <div id="result" class="result hidden">
+          <div class="result-head">
+            <span class="badge" id="predictedLabel">-</span>
+            <strong id="confidenceText">Confidence: -</strong>
+          </div>
+          <div id="probabilityList" class="probability-list"></div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const button = document.getElementById("predictButton");
+      const textarea = document.getElementById("newsText");
+      const status = document.getElementById("status");
+      const resultBox = document.getElementById("result");
+      const predictedLabel = document.getElementById("predictedLabel");
+      const confidenceText = document.getElementById("confidenceText");
+      const probabilityList = document.getElementById("probabilityList");
+
+      function renderProbabilities(probabilities) {
+        probabilityList.innerHTML = "";
+        Object.entries(probabilities).forEach(([label, score]) => {
+          const row = document.createElement("div");
+          row.className = "probability-row";
+
+          const title = document.createElement("span");
+          title.textContent = label;
+
+          const value = document.createElement("span");
+          value.textContent = `${(score * 100).toFixed(2)}%`;
+
+          row.appendChild(title);
+          row.appendChild(value);
+          probabilityList.appendChild(row);
+        });
+      }
+
+      button.addEventListener("click", async () => {
+        const text = textarea.value.trim();
+        resultBox.classList.add("hidden");
+
+        if (!text) {
+          status.textContent = "Masukkan teks terlebih dahulu.";
+          return;
+        }
+
+        status.textContent = "Sedang memproses prediksi...";
+
+        try {
+          const response = await fetch("/predict", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text }),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.detail || "Prediksi gagal.");
+          }
+
+          predictedLabel.textContent = data.label;
+          confidenceText.textContent = `Confidence: ${(data.confidence * 100).toFixed(2)}%`;
+          renderProbabilities(data.probabilities);
+          resultBox.classList.remove("hidden");
+          status.textContent = "Prediksi berhasil.";
+        } catch (error) {
+          status.textContent = error.message;
+        }
+      });
+    </script>
+  </body>
+</html>
